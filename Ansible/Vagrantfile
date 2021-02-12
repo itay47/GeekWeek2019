@@ -7,8 +7,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define "master" do |master|
     master.vm.box = "generic/ubuntu2010"
     master.vm.hostname = "master"
-    master.vm.network "public_network"
-    master.vm.network "private_network", ip: "192.168.50.4"
+    config.vm.network "public_network", ip: "192.168.1.50", :bridge => "en1: Intel(R) Dual Band Wireless-AC 8260"
     master.vm.provision "file", source: "id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
     public_key = File.read("id_rsa.pub")
     master.vm.provision :shell, :inline =>"
@@ -24,12 +23,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         chmod 400 /home/vagrant/.ssh/id_rsa
         sudo apt install ansible -y
         ", privileged: false   
+    master.vm.provider "virtualbox" do |vbmaster|
+      vbmaster.name = "ansible_master"
+    end
   end
+
   config.vm.define "web" do |web|
     web.vm.box = "generic/ubuntu2010"
     web.vm.hostname = "web"
-    web.vm.network "public_network"
-    web.vm.network "private_network", ip: "192.168.50.5"
+    config.vm.network "public_network", ip: "192.168.1.51", :bridge => "en1: Intel(R) Dual Band Wireless-AC 8260"
     web.vm.provision "file", source: "id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
     public_key = File.read("id_rsa.pub")
     web.vm.provision :shell, :inline =>"
@@ -44,5 +46,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         chmod -R 600 /home/vagrant/.ssh/config
         chmod 400 /home/vagrant/.ssh/id_rsa
         ", privileged: false
+    web.vm.provider "virtualbox" do |vbweb|
+      vbweb.name = "ansible_web"
+    end
   end  
 end
