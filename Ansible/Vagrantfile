@@ -7,10 +7,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define "master" do |master|
     master.vm.box = "generic/ubuntu2010"
     master.vm.hostname = "master"
-    config.vm.network "public_network", ip: "192.168.1.50", :bridge => "en1: Intel(R) Dual Band Wireless-AC 8260"
+    master.vm.network "public_network"
+    master.vm.network "private_network", ip: "192.168.50.4"
     master.vm.provision "file", source: "id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
     public_key = File.read("id_rsa.pub")
     master.vm.provision :shell, :inline =>"
+        echo 'Adding hosts'
+        echo '192.168.50.4 master ansible_master' >> /etc/hosts
+        echo '192.168.50.5 web ansible_web' >> /etc/hosts
         echo 'Copying ansible-vm public SSH Keys to the VM'
         mkdir -p /home/vagrant/.ssh
         chmod 700 /home/vagrant/.ssh
@@ -22,19 +26,22 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         chmod -R 600 /home/vagrant/.ssh/config
         chmod 400 /home/vagrant/.ssh/id_rsa
         sudo apt install ansible -y
-        ", privileged: false   
+        ", privileged: true
     master.vm.provider "virtualbox" do |vbmaster|
       vbmaster.name = "ansible_master"
-    end
+    end   
   end
-
   config.vm.define "web" do |web|
     web.vm.box = "generic/ubuntu2010"
     web.vm.hostname = "web"
-    config.vm.network "public_network", ip: "192.168.1.51", :bridge => "en1: Intel(R) Dual Band Wireless-AC 8260"
+    web.vm.network "public_network"
+    web.vm.network "private_network", ip: "192.168.50.5"
     web.vm.provision "file", source: "id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
     public_key = File.read("id_rsa.pub")
     web.vm.provision :shell, :inline =>"
+        echo 'Adding hosts'
+        echo '192.168.50.4 master ansible_master' >> /etc/hosts
+        echo '192.168.50.5 web ansible_web' >> /etc/hosts
         echo 'Copying ansible-vm public SSH Keys to the VM'
         mkdir -p /home/vagrant/.ssh
         chmod 700 /home/vagrant/.ssh
@@ -45,9 +52,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         echo 'UserKnownHostsFile /dev/null' >> /home/vagrant/.ssh/config
         chmod -R 600 /home/vagrant/.ssh/config
         chmod 400 /home/vagrant/.ssh/id_rsa
-        ", privileged: false
+        ", privileged: true
     web.vm.provider "virtualbox" do |vbweb|
-      vbweb.name = "ansible_web"
-    end
+        vbweb.name = "ansible_web"
+      end
   end  
 end
